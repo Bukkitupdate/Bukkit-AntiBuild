@@ -1,11 +1,12 @@
 package net.sradonia.bukkit.antibuild;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDamageEvent;
-import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPlaceEvent;
 
-public class BListener extends BlockListener {
+public class BListener implements Listener {
 	private final AntiBuild plugin;
 	private final MessageSender message;
 
@@ -14,7 +15,7 @@ public class BListener extends BlockListener {
 		this.message = message;
 	}
 
-	@Override
+	@EventHandler
 	public void onBlockDamage(BlockDamageEvent event) {
 		Player player = event.getPlayer();
 		if (!plugin.canBuild(player)) {
@@ -24,7 +25,7 @@ public class BListener extends BlockListener {
 		}
 	}
 
-	@Override
+	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent event) {
 		Player player = event.getPlayer();
 		if (!plugin.canBuild(player)) {

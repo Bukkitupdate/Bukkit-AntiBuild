@@ -1,10 +1,11 @@
 package net.sradonia.bukkit.antibuild;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerListener;
 
-public class PListener extends PlayerListener {
+public class PListener implements Listener {
 	private final AntiBuild plugin;
 	private final MessageSender message;
 
@@ -13,7 +14,7 @@ public class PListener extends PlayerListener {
 		this.message = message;
 	}
 
-	@Override
+	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		Player player = event.getPlayer();
 		if (!plugin.canInteract(player)) {

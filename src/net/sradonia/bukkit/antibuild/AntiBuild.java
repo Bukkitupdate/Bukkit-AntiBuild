@@ -4,14 +4,12 @@ import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 import java.util.logging.Logger;
 
+import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Priority;
-import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.config.Configuration;
 
 public class AntiBuild extends JavaPlugin {
 	public static final Logger log = Logger.getLogger("Minecraft");
@@ -63,19 +61,17 @@ public class AntiBuild extends JavaPlugin {
 		MessageSender messageSender = (message == null) ? null : new MessageSender(message, config.getInt("build.messageCooldown", 3));
 
 		final BListener bl = new BListener(this, messageSender);
-		pluginManager.registerEvent(Type.BLOCK_DAMAGE, bl, Priority.Normal, this);
-		pluginManager.registerEvent(Type.BLOCK_PLACE, bl, Priority.Normal, this);
+		pluginManager.registerEvents(bl, this);
 		
 		final EListener el = new EListener(this, messageSender);
-		pluginManager.registerEvent(Type.PAINTING_BREAK, el, Priority.Normal, this);
-		pluginManager.registerEvent(Type.PAINTING_PLACE, el, Priority.Normal, this);
+		pluginManager.registerEvents(el, this);
 
 		if (config.getBoolean("interaction.check", false)) {
 			message = getConfigString("interaction.message");
 			messageSender = (message == null) ? null : new MessageSender(message, config.getInt("interaction.messageCooldown", 3));
 
 			final PListener pl = new PListener(this, messageSender);
-			pluginManager.registerEvent(Type.PLAYER_INTERACT, pl, Priority.Normal, this);
+			pluginManager.registerEvents(pl, this);
 
 			log.info("[" + pdf.getName() + "] registered interaction listener");
 		}
