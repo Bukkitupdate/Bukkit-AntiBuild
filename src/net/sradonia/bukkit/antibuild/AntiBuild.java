@@ -4,7 +4,7 @@ import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 import java.util.logging.Logger;
 
-import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -12,9 +12,11 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class AntiBuild extends JavaPlugin {
+	
 	public static final Logger log = Logger.getLogger("Minecraft");
 
 	private PermissionHandler permissions;
+	private FileConfiguration config;
 	private boolean multiworldSupport;
 
 	public void onEnable() {
@@ -24,41 +26,15 @@ public class AntiBuild extends JavaPlugin {
 			log.severe("[" + pdf.getName() + "] version " + pdf.getVersion() + " not enabled! Permission plugin not detected!");
 			return;
 		}
-
-		// Load configuration
-		Configuration config = getConfiguration();
-		boolean configChanged = false;
-		if (config.getProperty("build.message") == null) {
-			config.setProperty("build.message", config.getString("message", "You don't have permission to build!"));
-			config.removeProperty("message");
-			configChanged = true;
-		}
-		if (config.getProperty("build.messageCooldown") == null) {
-			config.setProperty("build.messageCooldown", 3);
-			configChanged = true;
-		}
-		if (config.getProperty("interaction.check") == null) {
-			config.setProperty("interaction.check", config.getBoolean("interactCheck", false));
-			config.removeProperty("interactCheck");
-			configChanged = true;
-		}
-		if (config.getProperty("interaction.message") == null) {
-			config.setProperty("interaction.message", config.getString("interactMessage", "You don't have permission to interact with the world!"));
-			config.removeProperty("interactMessage");
-			configChanged = true;
-		}
-		if (config.getProperty("interaction.messageCooldown") == null) {
-			config.setProperty("interaction.messageCooldown", 3);
-			configChanged = true;
-		}
-		if (configChanged)
-			config.save();
+		
+		//@tyzoid's favorite part
+		loadConfig();
 
 		// Register listeners
 		PluginManager pluginManager = getServer().getPluginManager();
 
 		String message = getConfigString("build.message");
-		MessageSender messageSender = (message == null) ? null : new MessageSender(message, config.getInt("build.messageCooldown", 3));
+		MessageSender messageSender = (message == null) ? null : new MessageSender(message, Integer.parseInt(getConfigString("build.messageCooldown")));
 
 		final BListener bl = new BListener(this, messageSender);
 		pluginManager.registerEvents(bl, this);
@@ -66,9 +42,9 @@ public class AntiBuild extends JavaPlugin {
 		final EListener el = new EListener(this, messageSender);
 		pluginManager.registerEvents(el, this);
 
-		if (config.getBoolean("interaction.check", false)) {
+		if (getConfigString("interaction.check").equalsIgnoreCase("false")) {
 			message = getConfigString("interaction.message");
-			messageSender = (message == null) ? null : new MessageSender(message, config.getInt("interaction.messageCooldown", 3));
+			messageSender = (message == null) ? null : new MessageSender(message, Integer.parseInt(getConfigString("build.messageCooldown")));
 
 			final PListener pl = new PListener(this, messageSender);
 			pluginManager.registerEvents(pl, this);
@@ -79,14 +55,51 @@ public class AntiBuild extends JavaPlugin {
 		log.info("[" + pdf.getName() + "] version " + pdf.getVersion() + " enabled " + (multiworldSupport ? "with" : "without") + " multiworld support");
 	}
 
-	private String getConfigString(String path) {
-		String s = getConfiguration().getString(path);
-		if (s != null) {
-			s = s.trim();
-			if (s.length() == 0)
-				s = null;
+	private void loadConfig(){
+		if(exists() == false){
+		    config = getConfig();
+		    config.options().copyDefaults(false);
+		    String p1 = "build.message";
+		    String p2 = "build.messageCooldown";
+		    String p3 = "interaction.check";
+		    String p4 = "interaction.message";
+		    String p5 = "interaction.messageCooldown";
+		    
+		    config.addDefault(p1, "You don't have permission to build!");
+		    config.addDefault(p2, "3");
+		    config.addDefault(p3, "false");
+		    config.addDefault(p4, "You don't have permission to interact with the world!");
+		    config.addDefault(p5, "3");
+		    
+		    config.options().copyDefaults(true);
+		    saveConfig();
+	    	}			
+	}
+
+	private boolean exists() {	
+		try{
+			File file = new File("plugins/AntiBuild/config.yml"); 
+	        	if (file.exists()) { 
+	        		return true;
+	        	}else{
+	        		return false;
+	        	}
+
+		}catch (Exception e){
+			  System.err.println("Error: " + e.getMessage());
+			  return true;
 		}
-		return s;
+	}
+
+	private String getConfigString(String path) {
+		config = getConfig();
+	    	String message = config.getString(path);
+	    	if(message != null){
+			message.trim();
+			return message;
+	    	}else{
+	    		return null;
+	    	}
 	}
 
 	public void onDisable() {
